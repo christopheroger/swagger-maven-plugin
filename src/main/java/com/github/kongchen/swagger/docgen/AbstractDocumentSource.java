@@ -1,5 +1,27 @@
 package com.github.kongchen.swagger.docgen;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,25 +38,13 @@ import com.github.kongchen.swagger.docgen.mavenplugin.ApiSource;
 import com.github.kongchen.swagger.docgen.reader.AbstractReader;
 import com.github.kongchen.swagger.docgen.reader.ClassSwaggerReader;
 import com.github.kongchen.swagger.docgen.reader.ModelModifier;
+
 import io.swagger.converter.ModelConverter;
 import io.swagger.converter.ModelConverters;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
 import io.swagger.models.properties.Property;
 import io.swagger.util.Yaml;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-
-import java.io.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Type;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -142,7 +152,19 @@ public abstract class AbstractDocumentSource {
             }
         }
         cleanupOlds(dir);
-
+        String charset = apiSource.getOutputEncoding();
+        //testing charset
+        if (charset!=null){
+            try
+            {
+                Charset.forName(charset);
+            }
+            catch (Exception e)
+            {
+                throw new GenerateException(String.format("outputEncoding parameter is unknown."));
+            }
+        }
+       
         try {
             if (outputFormats != null) {
                 for (String format : outputFormats.split(",")) {
@@ -155,17 +177,17 @@ public abstract class AbstractDocumentSource {
                     switch (output) {
                         case json:
                             ObjectWriter jsonWriter = mapper.writer(new DefaultPrettyPrinter());
-                            FileUtils.write(new File(dir, "swagger.json"), jsonWriter.writeValueAsString(swagger));
+                            FileUtils.write(new File(dir, "swagger.json"), jsonWriter.writeValueAsString(swagger), charset);
                             break;
                         case yaml:
-                            FileUtils.write(new File(dir, "swagger.yaml"), Yaml.pretty().writeValueAsString(swagger));
+                            FileUtils.write(new File(dir, "swagger.yaml"), Yaml.pretty().writeValueAsString(swagger), charset);
                             break;
                     }
                 }
             } else {
                 // Default to json
                 ObjectWriter jsonWriter = mapper.writer(new DefaultPrettyPrinter());
-                FileUtils.write(new File(dir, "swagger.json"), jsonWriter.writeValueAsString(swagger));
+                FileUtils.write(new File(dir, "swagger.json"), jsonWriter.writeValueAsString(swagger), charset);
             }
         } catch (IOException e) {
             throw new GenerateException(e);

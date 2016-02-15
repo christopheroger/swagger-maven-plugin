@@ -1,16 +1,18 @@
 package com.github.kongchen.swagger.docgen.mavenplugin;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.github.kongchen.swagger.docgen.GenerateException;
-import io.swagger.annotations.Api;
-import io.swagger.models.Info;
-import java.util.ArrayList;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.reflections.Reflections;
+
+import com.github.kongchen.swagger.docgen.GenerateException;
+
+import io.swagger.annotations.Api;
+import io.swagger.models.Info;
 
 /**
  * Created with IntelliJ IDEA.
@@ -63,8 +65,15 @@ public class ApiSource {
     @Parameter
     private String outputFormats;
 
-    @Parameter
+    @Parameter(required = false)
     private String swaggerDirectory;
+    
+    /**
+     * Output charset encoding for yaml or json file.
+     * JVM default encoding if not set.
+     */    
+    @Parameter
+    private String outputEncoding;
 
     /**
      * <code>attachSwaggerArtifact</code> triggers plugin execution to attach the generated
@@ -332,6 +341,16 @@ public class ApiSource {
 
     public void setModelConverters(List<String> modelConverters) {
         this.modelConverters = modelConverters;
+    }
+
+    public String getOutputEncoding()
+    {
+        return outputEncoding;
+    }
+
+    public void setOutputEncoding(String outputEncoding)
+    {
+        this.outputEncoding = outputEncoding;
     }
 }
 
